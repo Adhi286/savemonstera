@@ -12,3 +12,4 @@ google-generativeai
 pydantic
 jinja2
 python-jose
+psycopg2-binary
