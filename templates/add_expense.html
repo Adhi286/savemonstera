@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMonstera - Add Expense</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.replace('/');
+        }
+    </script>
+</head>
+<body>
+    <div id="spinner-overlay"><div class="spinner"></div></div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/static/img/custom_logo.jpg" alt="Logo" class="sidebar-logo">
+                <h3 style="font-size: 1.1rem; font-weight: 700;">SaveMonstera</h3>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard">📊 Dashboard</a></li>
+                <li><a href="/add_expense" class="active">➕ Add Expense</a></li>
+                <li><a href="/history">📜 History</a></li>
+                <li><a href="/settings">⚙️ Settings</a></li>
+            </ul>
+            <div class="logout-container" style="padding: 20px;">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%;">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-flex">
+                <h2>Add Expense</h2>
+            </div>
+            
+            <div class="card">
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('manual')">Manual Entry</button>
+                    <button class="tab-btn" onclick="switchTab('upload')">Upload File / Voice</button>
+                </div>
+                
+                <div id="manualTab" class="tab-content active">
+                    <form id="expenseForm">
+                        <div class="form-group">
+                            <label>Amount (₹)</label>
+                            <input type="number" step="0.01" id="amount" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" id="date" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <input type="text" id="description" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="category" class="form-control">
+                                <option>Food</option>
+                                <option>Transport</option>
+                                <option>Entertainment</option>
+                                <option>Education</option>
+                                <option>Shopping</option>
+                                <option>Bills</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="max-width: 200px;">Save Expense</button>
+                    </form>
+                </div>
+                
+                <div id="uploadTab" class="tab-content">
+                    <form id="uploadForm">
+                        <div class="form-group">
+                            <label>Upload File (PDF/CSV/XLSX) or Audio</label>
+                            <input type="file" id="file" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="max-width: 200px;">Process File</button>
+                    </form>
+                    <div id="uploadResult" style="margin-top: 20px;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="toast"></div>
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.getElementById('date').valueAsDate = new Date();
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tab === 'manual') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('manualTab').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('uploadTab').classList.add('active');
+            }
+        }
+        
+        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                amount: parseFloat(document.getElementById('amount').value),
+                date: document.getElementById('date').value,
+                description: document.getElementById('description').value,
+                category: document.getElementById('category').value,
+                type: 'debit',
+                mode: 'manual'
+            };
+            
+            try {
+                showSpinner();
+                const res = await apiFetch('/api/expenses', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                hideSpinner();
+                
+                if (res.status === 'flagged') {
+                    showToast("Expense flagged: Exceeds budget limits!", "error");
+                } else {
+                    showToast("Expense saved successfully", "success");
+                }
+                document.getElementById('expenseForm').reset();
+                document.getElementById('date').valueAsDate = new Date();
+            } catch(err) {
+                hideSpinner();
+                showToast(err.message, "error");
+            }
+        });
+        
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('file').files[0];
+            if(!file) return;
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            try {
+                showSpinner();
+                const res = await apiFetch('/api/upload', {
+                    method: 'POST',
+                    headers: {}, 
+                    body: formData
+                });
+                hideSpinner();
+                document.getElementById('uploadResult').innerHTML = `
+                    <div style="background:#e6fffa; padding:15px; border-radius:8px; border:1px solid #38a169; color:#276749;">
+                        <strong>Processed Successfully!</strong><br>
+                        Transactions extracted: ${res.transactions_extracted}
+                    </div>
+                `;
+            } catch(err) {
+                hideSpinner();
+                showToast(err.message, "error");
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMonstera - Settings</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.replace('/');
+        }
+    </script>
+</head>
+<body>
+    <div id="spinner-overlay"><div class="spinner"></div></div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/static/img/custom_logo.jpg" alt="Logo" class="sidebar-logo">
+                <h3 style="font-size: 1.1rem; font-weight: 700;">SaveMonstera</h3>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard">📊 Dashboard</a></li>
+                <li><a href="/add_expense">➕ Add Expense</a></li>
+                <li><a href="/history">📜 History</a></li>
+                <li><a href="/settings" class="active">⚙️ Settings</a></li>
+            </ul>
+            <div class="logout-container" style="padding: 20px;">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%;">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-flex">
+                <h2>Account Settings</h2>
+            </div>
+            
+            <div class="card" style="max-width: 600px;">
+                <h3 class="card-title">Budget Configuration</h3>
+                <form id="settingsForm">
+                    <div class="form-group">
+                        <label>Weekly Limit (₹)</label>
+                        <input type="number" id="weekly_limit" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Monthly Limit (₹)</label>
+                        <input type="number" id="monthly_limit" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Agent Warning Threshold (₹) <br><small style="color: var(--text-muted); font-weight: normal;">(Any expense above this is reviewed by AI)</small></label>
+                        <input type="number" id="agent_threshold" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Settings</button>
+                </form>
+            </div>
+        </main>
+    </div>
+    
+    <div id="toast"></div>
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                showSpinner();
+                const data = await apiFetch('/api/settings');
+                document.getElementById('weekly_limit').value = data.weekly_limit;
+                document.getElementById('monthly_limit').value = data.monthly_limit;
+                document.getElementById('agent_threshold').value = data.agent_threshold;
+                hideSpinner();
+            } catch(e) {
+                hideSpinner();
+                showToast("Failed to load settings", "error");
+            }
+        });
+        
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                weekly_limit: parseFloat(document.getElementById('weekly_limit').value),
+                monthly_limit: parseFloat(document.getElementById('monthly_limit').value),
+                agent_threshold: parseFloat(document.getElementById('agent_threshold').value)
+            };
+            
+            try {
+                showSpinner();
+                await apiFetch('/api/settings', {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                hideSpinner();
+                showToast("Settings updated successfully!", "success");
+            } catch(err) {
+                hideSpinner();
+                showToast(err.message, "error");
+            }
+        });
+    </script>
+</body>
+</html>

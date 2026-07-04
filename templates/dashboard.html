@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMonstera - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.replace('/');
+        }
+    </script>
+</head>
+<body>
+    <div id="spinner-overlay"><div class="spinner"></div></div>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="/static/img/custom_logo.jpg" alt="Logo" class="sidebar-logo">
+                <h3 style="font-size: 1.1rem; font-weight: 700;">SaveMonstera</h3>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/dashboard" class="active">📊 Dashboard</a></li>
+                <li><a href="/add_expense">➕ Add Expense</a></li>
+                <li><a href="/history">📜 History</a></li>
+                <li><a href="/settings">⚙️ Settings</a></li>
+            </ul>
+            <div class="logout-container" style="padding: 20px;">
+                <button onclick="logout()" class="btn btn-danger" style="width: 100%;">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="header-flex">
+                <h2>Dashboard Overview</h2>
+            </div>
+            
+            <div class="card-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">💰</span>
+                    <h3 class="stat-title">Total Monthly Expenses</h3>
+                    <p class="stat-value" id="totalMonth">₹0.00</p>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📈</span>
+                    <h3 class="stat-title">Remaining Monthly Budget</h3>
+                    <p class="stat-value" id="remainingMonth">₹0.00</p>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📅</span>
+                    <h3 class="stat-title">Total Weekly Expenses</h3>
+                    <p class="stat-value" id="totalWeek">₹0.00</p>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📉</span>
+                    <h3 class="stat-title">Remaining Weekly Budget</h3>
+                    <p class="stat-value" id="remainingWeek">₹0.00</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 class="card-title">Category Breakdown (This Month)</h3>
+                <div id="categoryChart">
+                    <p>Loading chart data...</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3 class="card-title">Recent Activity</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentActivity">
+                            <tr><td colspan="5">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <div id="toast"></div>
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                showSpinner();
+                const data = await apiFetch('/api/expenses/dashboard-stats');
+                
+                document.getElementById('totalMonth').textContent = `₹${data.monthly_total.toFixed(2)}`;
+                document.getElementById('remainingMonth').textContent = `₹${data.monthly_remaining.toFixed(2)}`;
+                document.getElementById('totalWeek').textContent = `₹${data.weekly_total.toFixed(2)}`;
+                document.getElementById('remainingWeek').textContent = `₹${data.weekly_remaining.toFixed(2)}`;
+                
+                const catContainer = document.getElementById('categoryChart');
+                catContainer.innerHTML = '';
+                const cats = data.category_breakdown;
+                if(Object.keys(cats).length === 0) {
+                    catContainer.innerHTML = '<p>No data yet.</p>';
+                } else {
+                    let maxCat = Math.max(...Object.values(cats));
+                    for(const [cat, val] of Object.entries(cats)) {
+                        const pct = maxCat > 0 ? (val / maxCat) * 100 : 0;
+                        catContainer.innerHTML += `
+                            <div class="chart-bar-container">
+                                <div class="chart-bar-label">
+                                    <span>${cat}</span>
+                                    <span>₹${val.toFixed(2)}</span>
+                                </div>
+                                <div class="chart-bar-bg">
+                                    <div class="chart-bar-fill" style="width: ${pct}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                const formatDate = (dateStr) => {
+                    if (!dateStr) return "No date";
+                    const d = new Date(dateStr);
+                    if (isNaN(d)) return "No date";
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    return `${String(d.getDate()).padStart(2, '0')}-${months[d.getMonth()]}-${d.getFullYear()}`;
+                };
+                
+                // Fetch recent 5 expenses
+                const recentData = await apiFetch('/api/expenses?limit=5');
+                const tbody = document.getElementById('recentActivity');
+                tbody.innerHTML = '';
+                if(recentData.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5">No recent expenses.</td></tr>';
+                } else {
+                    recentData.forEach(exp => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${formatDate(exp.date)}</td>
+                                <td>${exp.description || '-'}</td>
+                                <td>${exp.category}</td>
+                                <td style="font-weight: 600;">₹${exp.amount.toFixed(2)}</td>
+                                <td><span class="badge badge-${exp.status.toLowerCase()}">${exp.status}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                hideSpinner();
+            } catch(e) {
+                hideSpinner();
+                showToast("Failed to load dashboard data", "error");
+            }
+        });
+    </script>
+</body>
+</html>

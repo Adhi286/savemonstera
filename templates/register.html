@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMonstera - Register</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="auth-container">
+  <div class="auth-card">
+    <img src="/static/img/custom_logo.jpg" alt="Logo" class="auth-logo">
+    <h2 class="auth-title">Create Account</h2>
+    <p class="auth-subtitle">Start your saving journey</p>
+    
+    <form id="registerForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" class="form-control" required placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" class="form-control" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" class="form-control" required placeholder="Create a password">
+      </div>
+      <div class="form-group">
+        <label for="confirm_password">Confirm Password</label>
+        <input type="password" id="confirm_password" class="form-control" required placeholder="Confirm your password">
+      </div>
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="terms" required>
+        <label for="terms" style="margin: 0;">I agree to the <a href="/terms" target="_blank" style="color: var(--primary-yellow); text-decoration: none;">Terms & Conditions</a></label>
+      </div>
+      <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+    
+    <div class="auth-links">
+      <p>Already have an account? <a href="/">Login</a></p>
+    </div>
+  </div>
+</div>
+<script>
+document.getElementById('registerForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm_password').value;
+    
+    if (password !== confirm) {
+        showToast("Passwords do not match", "error");
+        return;
+    }
+    
+    try {
+        showSpinner();
+        await apiFetch('/api/auth/register', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, password })
+        });
+        hideSpinner();
+        showToast('Registration successful! Please login.', 'success');
+        setTimeout(() => window.location.href = '/', 1500);
+    } catch (err) {
+        hideSpinner();
+        showToast(err.message, 'error');
+    }
+});
+</script>
+    <div id="toast"></div>
+
+    <script src="/static/js/app.js"></script>
+            } catch(e) {
+                showToast("Connection error");
+            }
+        });
+    </script>
+</body>
+</html>

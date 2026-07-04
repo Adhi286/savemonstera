@@ -1,0 +1,28 @@
+[project]
+name = "student-expense-agent"
+version = "0.1.0"
+description = "SaveMonstera Student Expense Agent"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "supabase",
+    "pandas",
+    "pdfplumber",
+    "openpyxl",
+    "python-docx",
+    "reportlab",
+    "python-multipart",
+    "python-dotenv",
+    "google-generativeai",
+    "pydantic",
+    "jinja2",
+    "python-jose"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

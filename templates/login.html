@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveMonstera - Login</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script>
+        if (localStorage.getItem('token')) {
+            window.location.replace('/dashboard');
+        }
+    </script>
+</head>
+<body>
+    <div id="spinner-overlay"><div class="spinner"></div></div>
+    <div class="auth-container">
+        <div class="auth-card">
+            <img src="/static/img/custom_logo.jpg" alt="Logo" class="auth-logo">
+            <h2 class="auth-title">SaveMonstera</h2>
+            <p class="auth-subtitle">Smart spending for students</p>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" class="form-control" required placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" class="form-control" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+            
+            <div class="auth-links">
+                <p>Don't have an account? <a href="/register">Create Account</a></p>
+                <p style="margin-top: 10px;"><a href="/terms" style="color: var(--text-muted); font-size: 0.8rem;">Terms & Conditions</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
+    <script src="/static/js/app.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                showSpinner();
+                const res = await apiFetch('/api/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({ email, password })
+                });
+                hideSpinner();
+                localStorage.setItem('token', res.access_token);
+                window.location.replace('/dashboard');
+            } catch (err) {
+                hideSpinner();
+                showToast(err.message, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

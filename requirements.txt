@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+supabase
+pandas
+pdfplumber
+openpyxl
+python-docx
+reportlab
+python-multipart
+python-dotenv
+google-generativeai
+pydantic
+jinja2
+python-jose
