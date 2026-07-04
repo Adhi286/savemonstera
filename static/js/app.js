@@ -93,7 +93,7 @@ function switchTab(tabId) {
 document.addEventListener("DOMContentLoaded", () => {
     const currentPath = window.location.pathname;
     if (['/dashboard', '/add_expense', '/history', '/settings'].includes(currentPath)) {
-        if (!localStorage.getItem('supabase.auth.token')) {
+        if (!localStorage.getItem('token')) {
             window.location.href = '/';
         }
     }
