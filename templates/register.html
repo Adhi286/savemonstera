@@ -58,13 +58,18 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     
     try {
         showSpinner();
-        await apiFetch('/api/auth/register', {
+        const data = await apiFetch('/api/auth/register', {
             method: 'POST',
             body: JSON.stringify({ name, email, password })
         });
+        
+        if (data && data.access_token) {
+            localStorage.setItem('token', data.access_token);
+        }
+        
         hideSpinner();
-        showToast('Registration successful! Please login.', 'success');
-        setTimeout(() => window.location.href = '/', 1500);
+        showToast('Registration successful! Logging you in...', 'success');
+        setTimeout(() => window.location.href = '/dashboard', 1500);
     } catch (err) {
         hideSpinner();
         showToast(err.message, 'error');

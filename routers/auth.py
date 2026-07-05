@@ -14,6 +14,7 @@ class UserAuth(BaseModel):
 @router.post("/register")
 def register_user(user: UserAuth):
     try:
+        # Sign up the user
         res = supabase.auth.sign_up({
             "email": user.email,
             "password": user.password,
@@ -21,7 +22,19 @@ def register_user(user: UserAuth):
                 "data": {"name": user.name}
             }
         })
-        return {"message": "User registered successfully", "user": res.user}
+        
+        # Automatically log in the user to get the access token
+        # (This requires email confirmation to be disabled in the Supabase Dashboard)
+        login_res = supabase.auth.sign_in_with_password({
+            "email": user.email,
+            "password": user.password
+        })
+        
+        return {
+            "message": "User registered and logged in successfully", 
+            "access_token": login_res.session.access_token,
+            "user": login_res.user
+        }
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
