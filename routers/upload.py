@@ -19,9 +19,11 @@ def clean_date(val) -> str:
 def clean_amount(val) -> float:
     try:
         if pd.isna(val): return 0.0
-        # Remove currency symbols and commas
-        val = str(val).replace('₹', '').replace(',', '').strip()
-        return float(val)
+        val_str = str(val)
+        # Keep only digits, decimals, and negative signs
+        cleaned = ''.join(c for c in val_str if c.isdigit() or c in '.-')
+        if not cleaned or cleaned == '.' or cleaned == '-': return 0.0
+        return abs(float(cleaned))
     except:
         return 0.0
 

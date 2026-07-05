@@ -28,7 +28,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Import routers (we will create these next)
-from routers import auth, expenses, upload, ai_agent, settings, export
+from routers import auth, expenses, upload, ai_agent, settings, export, dashboard
 
 app.include_router(auth.router, prefix="/api/auth", tags=["Auth"])
 app.include_router(expenses.router, prefix="/api/expenses", tags=["Expenses"])
@@ -36,6 +36,7 @@ app.include_router(upload.router, prefix="/api/upload", tags=["Upload"])
 app.include_router(ai_agent.router, prefix="/api/ai", tags=["AI Agent"])
 app.include_router(settings.router, prefix="/api/settings", tags=["Settings"])
 app.include_router(export.router, prefix="/api/export", tags=["Export"])
+app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
 
 # Frontend routes
 @app.get("/")

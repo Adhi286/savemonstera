@@ -103,10 +103,10 @@
     <div id="toast"></div>
     <script src="/static/js/app.js"></script>
     <script>
-        async function refreshDashboardStats() {
+        async function fetchDashboardData() {
             showSpinner();
             try {
-                const data = await apiFetch('/api/expenses/dashboard-stats');
+                const data = await apiFetch('/api/dashboard');
                 
                 document.getElementById('totalMonth').textContent = `₹${data.monthly_total.toFixed(2)}`;
                 document.getElementById('remainingMonth').textContent = `₹${data.monthly_remaining.toFixed(2)}`;
@@ -170,7 +170,7 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', refreshDashboardStats);
+        document.addEventListener('DOMContentLoaded', fetchDashboardData);
 
         document.getElementById('dashboardUploadForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -187,11 +187,20 @@
                     body: formData
                 });
                 
-                showToast(`${res.transactions_extracted} transactions imported! Dashboard updated.`, "success");
+                if (res.error) {
+                    throw new Error(res.error);
+                }
+                
+                if (res.imported === 0) {
+                    showToast("No valid rows found to import from file.", "error");
+                } else {
+                    showToast(`${res.imported} transactions imported! Dashboard updated.`, "success");
+                }
+                
                 e.target.reset(); // clear the file input
                 
                 // Refresh dashboard automatically without page reload
-                await refreshDashboardStats();
+                await fetchDashboardData();
             } catch(err) {
                 hideSpinner();
                 showToast(err.message, "error");
