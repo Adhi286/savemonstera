@@ -66,7 +66,7 @@ def export_excel(data, total, high, low, cats):
     return Response(
         content=output.getvalue(), 
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": "attachment; filename=expenses.xlsx"}
+        headers={"Content-Disposition": "attachment; filename=savemonstera_expenses.xlsx"}
     )
 
 def export_pdf(data, total, high, low, cats):
@@ -98,7 +98,7 @@ def export_pdf(data, total, high, low, cats):
     return Response(
         content=output.getvalue(), 
         media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=expenses.pdf"}
+        headers={"Content-Disposition": "attachment; filename=savemonstera_expenses.pdf"}
     )
 
 def export_docx(data, total, high, low, cats):
@@ -137,5 +137,5 @@ def export_docx(data, total, high, low, cats):
     return Response(
         content=output.getvalue(), 
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": "attachment; filename=expenses.docx"}
+        headers={"Content-Disposition": "attachment; filename=savemonstera_expenses.docx"}
     )
