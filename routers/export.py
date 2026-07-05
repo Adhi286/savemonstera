@@ -62,8 +62,9 @@ def export_excel(data, total, high, low, cats):
     writer.close()
     output.seek(0)
     
-    return StreamingResponse(
-        output, 
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(), 
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": "attachment; filename=expenses.xlsx"}
     )
@@ -93,8 +94,9 @@ def export_pdf(data, total, high, low, cats):
         
     c.save()
     output.seek(0)
-    return StreamingResponse(
-        output, 
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(), 
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=expenses.pdf"}
     )
@@ -131,8 +133,9 @@ def export_docx(data, total, high, low, cats):
     output = io.BytesIO()
     doc.save(output)
     output.seek(0)
-    return StreamingResponse(
-        output, 
+    from fastapi.responses import Response
+    return Response(
+        content=output.getvalue(), 
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         headers={"Content-Disposition": "attachment; filename=expenses.docx"}
     )

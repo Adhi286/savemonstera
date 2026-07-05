@@ -61,6 +61,17 @@
             </div>
 
             <div class="card">
+                <h3 class="card-title">Quick Upload</h3>
+                <form id="dashboardUploadForm" style="display: flex; gap: 10px; align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; margin: 0;">
+                        <label>Upload File (PDF/CSV/XLSX) or Audio</label>
+                        <input type="file" id="dashboardFile" class="form-control" accept=".csv,.xlsx,.pdf,audio/*" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="height: 40px; padding: 0 20px;">Upload & Import</button>
+                </form>
+            </div>
+
+            <div class="card">
                 <h3 class="card-title">Category Breakdown (This Month)</h3>
                 <div id="categoryChart">
                     <p>Loading chart data...</p>
@@ -92,9 +103,9 @@
     <div id="toast"></div>
     <script src="/static/js/app.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', async () => {
+        async function refreshDashboardStats() {
+            showSpinner();
             try {
-                showSpinner();
                 const data = await apiFetch('/api/expenses/dashboard-stats');
                 
                 document.getElementById('totalMonth').textContent = `₹${data.monthly_total.toFixed(2)}`;
@@ -152,10 +163,38 @@
                         `;
                     });
                 }
-                hideSpinner();
             } catch(e) {
-                hideSpinner();
                 showToast("Failed to load dashboard data", "error");
+            } finally {
+                hideSpinner();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', refreshDashboardStats);
+
+        document.getElementById('dashboardUploadForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = document.getElementById('dashboardFile').files[0];
+            if(!file) return;
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            
+            try {
+                showSpinner();
+                const res = await apiFetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                showToast(`${res.transactions_extracted} transactions imported! Dashboard updated.`, "success");
+                e.target.reset(); // clear the file input
+                
+                // Refresh dashboard automatically without page reload
+                await refreshDashboardStats();
+            } catch(err) {
+                hideSpinner();
+                showToast(err.message, "error");
             }
         });
     </script>

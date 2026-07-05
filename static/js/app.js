@@ -52,10 +52,13 @@ async function apiFetch(endpoint, options = {}) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(endpoint, {
+    const fetchOptions = {
+        cache: 'no-store',
         ...options,
         headers
-    });
+    };
+
+    const res = await fetch(endpoint, fetchOptions);
 
     if (res.status === 401 && window.location.pathname !== '/' && window.location.pathname !== '/register') {
         localStorage.removeItem('token');

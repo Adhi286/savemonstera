@@ -159,6 +159,9 @@
                         Transactions extracted: ${res.transactions_extracted}
                     </div>
                 `;
+                
+                // Refresh dashboard automatically after file import by redirecting
+                setTimeout(() => window.location.href = '/dashboard', 2000);
             } catch(err) {
                 hideSpinner();
                 showToast(err.message, "error");
